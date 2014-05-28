@@ -108,7 +108,7 @@ PHP_FUNCTION(camelize)
 
 	result = emalloc(arg_len + 1);
 
-	char *stringp = Z_STRVAL_P(arg);
+	char *stringp = estrdup(Z_STRVAL_P(arg));
 	while ((token = strsep(&stringp, delim)) != NULL) {
 		token_len = strlen(token);
 		if (token[0] > 0x60 && token[0] < 0x7b) {
@@ -117,6 +117,7 @@ PHP_FUNCTION(camelize)
 		strcpy(result + result_len, token);
 		result_len += token_len;
 	}
+	efree(stringp);
 	Z_ADDREF_P(return_value);
 	RETURN_STRINGL(result, result_len, 0);
 }
