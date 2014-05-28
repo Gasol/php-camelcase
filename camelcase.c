@@ -89,13 +89,36 @@ PHP_MINFO_FUNCTION(camelcase)
 
 PHP_FUNCTION(camelize)
 {
-	char *arg = NULL;
-	int arg_len, len;
-	char *strg;
+	const char *delim = "_";
+	zval *arg;
+	int arg_len;
+	char *token = NULL, *result = NULL;
+	size_t result_len = 0, token_len = 0;
 
-	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &arg, &arg_len) == FAILURE) {
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "z", &arg) == FAILURE) {
 		return;
 	}
+	if (Z_TYPE_P(arg) != IS_STRING) {
+		RETURN_NULL();
+	}
+	arg_len = Z_STRLEN_P(arg);
+	if (!arg_len) {
+		RETURN_EMPTY_STRING();
+	}
+
+	result = emalloc(arg_len + 1);
+
+	char *stringp = Z_STRVAL_P(arg);
+	while ((token = strsep(&stringp, delim)) != NULL) {
+		token_len = strlen(token);
+		if (token[0] > 0x60 && token[0] < 0x7b) {
+			token[0] -= 0x20;
+		}
+		strcpy(result + result_len, token);
+		result_len += token_len;
+	}
+	Z_ADDREF_P(return_value);
+	RETURN_STRINGL(result, result_len, 0);
 }
 
 /*
